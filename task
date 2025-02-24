@@ -1,0 +1,31 @@
+import openai
+import pandas as pd
+from jira import JIRA
+
+jira = JIRA(basic_auth=('your_username', 'your_password'), server='your_jira_server')
+def fetch_epic_requirements(epic_id):
+    jql = f'project = YOUR_PROJECT AND "Epic Link" = {epic_id}'
+    issues = jira.search_issues(jql)
+    requirements = [issue.fields.description for issue in issues]
+    return requirements
+def generate_test_cases(requirements):
+    openai.api_key = 'your_openai_api_key'
+    prompt = f"Generate test cases for the following requirements:\n{requirements}"
+    
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=1000
+    )
+    return response.choices[0].text.strip()
+def save_test_cases_to_csv(test_cases, file_name):
+    df = pd.DataFrame(test_cases, columns=['Test Cases'])
+    df.to_csv(file_name, index=False)
+def main(epic_id):
+    requirements = fetch_epic_requirements(epic_id)
+    test_cases = generate_test_cases(requirements)
+    save_test_cases_to_csv(test_cases, 'test_cases.csv')
+    print('Test cases generated and saved to test_cases.csv')
+if __name__ == "__main__":
+    epic_id = 'YOUR_EPIC_ID'
+    main(epic_id)
